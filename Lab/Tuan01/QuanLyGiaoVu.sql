@@ -1,0 +1,114 @@
+﻿CREATE DATABASE QuanLyGiaoVu;
+USE QuanLyGiaoVu;
+
+CREATE TABLE Khoa(
+	MaKhoa VARCHAR(4) NOT NULL,
+	TenKhoa VARCHAR(40),
+	NgTLap SMALLDATETIME,
+	TrgKhoa CHAR(4),
+
+	CONSTRAINT PK_MaKhoa PRIMARY KEY (MaKhoa),
+);
+
+CREATE TABLE MonHoc(
+	MaMH VARCHAR(10) NOT NULL,
+	TenMH VARCHAR(40),
+	TCLT TINYINT,
+	TCTH TINYINT,
+	MaKhoa VARCHAR(4),
+
+	CONSTRAINT PK_MaMH PRIMARY KEY (MaMH),
+	CONSTRAINT PK_Khoa_MonHoc FOREIGN KEY (MaKhoa) REFERENCES Khoa(MaKhoa),
+);
+
+CREATE TABLE DieuKien(
+	MaMH VARCHAR(10),
+	MaMH_Truoc VARCHAR(10),
+
+	CONSTRAINT PK_MaMH PRIMARY KEY (MaMH, MaMH_Truoc),
+	CONSTRAINT PK_Khoa_DieuKien FOREIGN KEY (MaMH) REFERENCES MonHoc(MaMH),
+	CONSTRAINT PK_Khoa_DieuKien_Truoc FOREIGN KEY (MaMH_Truoc) REFERENCES MonHoc(MaMH),
+);
+
+CREATE TABLE GiaoVien(
+	MaGV CHAR(4) NOT NULL,
+	HoTen VARCHAR(40),
+	HocVi VARCHAR(10),
+	HocHam VARCHAR(10),
+	GioiTinh VARCHAR(3),
+	NgSinh SMALLDATETIME,
+	NgVL SMALLDATETIME,
+	HeSo NUMERIC(4, 2),
+	MucLuong MONEY,
+	MaKhoa VARCHAR(4) NOT NULL,
+
+	CONSTRAINT PK_MaGV PRIMARY KEY (MaGV),
+	CONSTRAINT FK_Khoa_GiaoVien FOREIGN KEY (MaKhoa) REFERENCES Khoa(MaKhoa),
+);
+
+CREATE TABLE HocVien(
+	MaHV CHAR(5),
+	Ho VARCHAR(40),
+	Ten VARCHAR(10),
+	NgSinh SMALLDATETIME,
+	GioiTinh VARCHAR(3),
+	NoiSinh VARCHAR(40),
+	MaLop CHAR(3),
+
+	CONSTRAINT PK_MaHV PRIMARY KEY (MaHV),
+);
+
+CREATE TABLE Lop(
+	MaLop CHAR(3) NOT NULL,
+	TenLop VARCHAR(40),
+	TrgLop CHAR(5) NOT NULL,
+	SiSo TINYINT,
+	MaGVCN CHAR(4) NOT NULL,
+
+	CONSTRAINT PK_MaLop PRIMARY KEY (MaLop),
+	CONSTRAINT FK_HocVien_Lop FOREIGN KEY (TrgLop) REFERENCES HocVien(TrgLop),
+	CONSTRAINT FK_GiaoVien_Lop FOREIGN KEY (MaGVCN) REFERENCES GiaoVien(MaGV),
+);
+
+CREATE TABLE GiangDay(
+	MaLop CHAR(3),
+	MaMH VARCHAR(10),
+	MaGV CHAR(4),
+	HOCKY TINYINT,
+	NAM SMALLINT,
+	TUNGAY SMALLDATETIME,
+	DENNGAY SMALLDATETIME,
+
+	CONSTRAINT PK_MaLop_MaMH PRIMARY KEY (MaLop, MaMH),
+	
+	CONSTRAINT FK_Lop_GiangDay FOREIGN KEY (MaLop) REFERENCES Lop(MaLop),
+	CONSTRAINT FK_MonHoc_GiangDay FOREIGN KEY (MaMH) REFERENCES MonHoc(MaMH),
+	CONSTRAINT FK_GiaoVien_GiangDay FOREIGN KEY (MaGV) REFERENCES GiaoVien(MaGV),
+);
+
+CREATE TABLE KetQuaThi(
+	MaHV CHAR(5),
+	MaMH VARCHAR(10),
+	LanThi TINYINT,
+	NgThi SMALLDATETIME,
+	Diem NUMERIC(4, 2),
+	KQua VARCHAR(10),
+
+	CONSTRAINT PK_MaHV_MaMH_LanThi PRIMARY KEY (MaHV, MaMH, LanThi),
+	
+	CONSTRAINT FK_HocVien_KetQuaThi FOREIGN KEY (MaHV) REFERENCES HocVien(MaHV),
+	CONSTRAINT FK_MonHoc_KetQuaThi FOREIGN KEY (MaMH) REFERENCES MonHoc(MaMH),
+);
+
+-- Thuộc tính GIOITINH chỉ có giá trị là “Nam” hoặc “Nu”.
+ALTER TABLE HocVien
+
+-- Điểm số của một lần thi có giá trị từ 0 đến 10 và cần lưu đến 2 số lẽ (VD: 6.22).
+-- Kết quả thi là “Dat” nếu điểm từ 5 đến 10 và “Khong dat” nếu điểm nhỏ hơn 5.
+-- Học viên thi một môn tối đa 3 lần.
+-- Học kỳ chỉ có giá trị từ 1 đến 3.
+-- Học vị của giáo viên chỉ có thể là “CN”, “KS”, “Ths”, ”TS”, ”PTS”
+
+
+USE master;
+DROP DATABASE QuanLyGiaoVu;
