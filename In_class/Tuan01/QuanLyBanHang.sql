@@ -10,7 +10,7 @@ CREATE TABLE KhachHang(
 	NgDK SMALLDATETIME,
 	DoanhSo MONEY,
 
-	CONSTRAINT PK_MaKH PRIMARY KEY (MaKH),
+	CONSTRAINT PK_KhachHang PRIMARY KEY (MaKH),
 );
 
 CREATE TABLE NhanVien(
@@ -19,7 +19,7 @@ CREATE TABLE NhanVien(
 	SoDT VARCHAR(20),
 	NgVL SMALLDATETIME,
 
-	CONSTRAINT PK_MaNV PRIMARY KEY (MaNV),
+	CONSTRAINT PK_NhanVien PRIMARY KEY (MaNV),
 );
 
 CREATE TABLE SanPham(
@@ -29,7 +29,7 @@ CREATE TABLE SanPham(
 	NuocSX VARCHAR(40),
 	Gia MONEY,
 
-	CONSTRAINT PK_MaSP PRIMARY KEY (MaSP),
+	CONSTRAINT PK_SanPham PRIMARY KEY (MaSP),
 );
 
 CREATE TABLE HoaDon(
@@ -39,7 +39,8 @@ CREATE TABLE HoaDon(
 	MaNV CHAR(4),
 	TriGia MONEY,
 
-	CONSTRAINT PK_SoHD PRIMARY KEY (SoHD),
+	CONSTRAINT PK_HoaDon PRIMARY KEY (SoHD),
+
 	CONSTRAINT FK_KhachHang_HoaDon FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
 	CONSTRAINT FK_NhanVien_HoaDon FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV),
 );
@@ -49,7 +50,8 @@ CREATE TABLE CTHD(
 	MaSP CHAR(4) NOT NULL,
 	SL INT,
 	
-	CONSTRAINT PK_SoHD_MaSP PRIMARY KEY (SoHD, MaSP),
+	CONSTRAINT PK_CTHD PRIMARY KEY (SoHD, MaSP),
+
 	CONSTRAINT FK_HoaDon_CTHD FOREIGN KEY (SoHD) REFERENCES HoaDon(SoHD),
 	CONSTRAINT FK_SanPham_CTHD FOREIGN KEY (MaSP) REFERENCES SanPham(MaSP),
 );
@@ -82,7 +84,7 @@ ALTER COLUMN LoaiKH VARCHAR(20);
 
 -- Đơn vị tính của sản phẩm chỉ có thể là (“cay”,”hop”,”cai”,”quyen”,”chuc”
 ALTER TABLE SanPham
-ADD CHECK (DVT = 'cay' OR DVT = 'hop' OR DVT = 'cai' OR DVT = 'quyen' OR DVT = 'chuc')
+ADD CHECK (DVT IN ('cay', 'hop', 'cai', 'quyen', 'chuc'));
 
 -- Giá bán của sản phẩm từ 500 đồng trở lên
 ALTER TABLE SanPham
@@ -90,7 +92,7 @@ ADD CHECK (Gia > 500);
 
 -- Mỗi lần mua hàng, khách hàng phải mua ít nhất 1 sản phẩm
 ALTER TABLE CTHD
-ADD CHECK (SL > 0)
+ADD CHECK (SL > 0);
 
 -- Ngày khách hàng đăng ký là khách hàng thành viên phải lớn hơn ngày sinh của người đó
 ALTER TABLE KhachHang
