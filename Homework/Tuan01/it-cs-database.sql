@@ -1,3 +1,7 @@
+CREATE DATABASE TestSubject;
+USE TestSubject;
+DROP DATABASE TestSubject;
+
 -- Tạo bảng Chuyên gia
 CREATE TABLE ChuyenGia (
     MaChuyenGia INT PRIMARY KEY,
