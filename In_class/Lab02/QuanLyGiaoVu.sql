@@ -1,4 +1,5 @@
-﻿﻿CREATE DATABASE QuanLyGiaoVu;
+﻿﻿
+CREATE DATABASE QuanLyGiaoVu;
 USE QuanLyGiaoVu;
 
 CREATE TABLE KHOA 
