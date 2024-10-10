@@ -1,4 +1,4 @@
-
+USE TestSubject;
 
 -- Liệt kê tất cả các chuyên gia và sắp xếp theo họ tên.
 SELECT * FROM ChuyenGia ORDER BY HoTen;
@@ -13,7 +13,7 @@ SELECT * FROM CongTy WHERE (SoNhanVien>100);
 SELECT TenDuAn, NgayBatDau FROM DuAn WHERE (YEAR(NgayBatDau)=2023);
 
 -- Liệt kê tất cả các kỹ năng và sắp xếp theo tên kỹ năng.
-SELECT * FROM KyNang ORDER BY TenKeyNang;
+SELECT * FROM KyNang ORDER BY TenKyNang;
 
 -- Hiển thị tên và email của các chuyên gia có tuổi dưới 35 (tính đến năm 2024).
 SELECT HoTen, Email FROM ChuyenGia WHERE (DATEDIFF(year, NgaySinh, GETDATE()) < 35);
@@ -64,7 +64,7 @@ SELECT * FROM ChuyenGia;
 SELECT HoTen, Email FROM ChuyenGia WHERE (GioiTinh=N'Nữ');
 
 --  Liệt kê tất cả các công ty và số nhân viên của họ, sắp xếp theo số nhân viên giảm dần.
-SELECT TenCongTy, SoNhanVien WHERE CongTy ORDER BY SoNhanVien;
+SELECT TenCongTy, SoNhanVien FROM CongTy ORDER BY SoNhanVien;
 
 -- Hiển thị tất cả các dự án đang trong trạng thái "Đang thực hiện".
 SELECT * FROM DuAn WHERE (TrangThai=N'Đang thực hiện');
@@ -78,75 +78,96 @@ SELECT HoTen, ChuyenNganh FROM ChuyenGia WHERE (NamKinhNghiem>8);
 
 -- Liệt kê tất cả các dự án của công ty có MaCongTy là 1.
 SELECT * FROM DuAn
-JOIN CongTy On DuAn.MaCongTy=CongTu.MaCongTy 
-WHERE (MaCongTy=1);
+JOIN CongTy On DuAn.MaCongTy=CongTy.MaCongTy 
+WHERE (CongTy.MaCongTy=1);
 
 -- Đếm số lượng chuyên gia trong mỗi chuyên ngành.
-SELECT count(MaChuyenGia) FROM ChuyenGia GROUP BY ChuyenNganh;
+SELECT ChuyenNganh, count(MaChuyenGia) FROM ChuyenGia GROUP BY ChuyenNganh;
 
 -- Tìm chuyên gia có số năm kinh nghiệm cao nhất.
-SELECT max(NamKinhNghiem) FROM ChuyenGia GROUP BY MaChuyenGia;
+SELECT HoTen, max(NamKinhNghiem) FROM ChuyenGia GROUP BY HoTen;
 
--- Liệt kê tổng số nhân viên cho mỗi công ty mà có số nhân viên lớn hơn 100. Sắp xếp kết quả theo số nhân viên tăng dần.
-SELECT SoNhanVien FROM CongTy WHERE (SoNhanVien>100) ORDER BY SoNhanVien;
+-- Liệt kê tổng số nhân viên cho mỗi công ty mà có số nhân viên lớn hơn 100.
+-- Sắp xếp kết quả theo số nhân viên tăng dần.
+SELECT TenCongTy, SoNhanVien FROM CongTy WHERE (SoNhanVien>100) ORDER BY SoNhanVien;
 
--- Xác định số lượng dự án mà mỗi công ty tham gia có trạng thái 'Đang thực hiện'. Chỉ bao gồm các công ty có hơn một dự án đang thực hiện. Sắp xếp kết quả theo số lượng dự án giảm dần.
-SELECT count(MaDuAn) as SoDuAn
+-- Xác định số lượng dự án mà mỗi công ty tham gia có trạng thái 'Đang thực hiện'.
+-- Chỉ bao gồm các công ty có hơn một dự án đang thực hiện.
+-- Sắp xếp kết quả theo số lượng dự án giảm dần.
+SELECT TenCongTy, count(MaDuAn) as SoDuAn
 FROM CongTy
 JOIN DuAn ON CongTy.MaCongTy=DuAn.MaCongTy
-WHERE (TrangThai=N'Đang thực hiện' AND MaDuAn IS NOT NULL)
-GROUP BY MaCongTy
+WHERE (TrangThai=N'Đang thực hiện')
+GROUP BY TenCongTy
 ORDER BY SoDuAn DESC;
 
--- Tìm kiếm các kỹ năng mà chuyên gia có cấp độ từ 4 trở lên và tính tổng số chuyên gia cho mỗi kỹ năng đó. Chỉ bao gồm những kỹ năng có tổng số chuyên gia lớn hơn 2. Sắp xếp kết quả theo tên kỹ năng tăng dần.
-SELECT sum(MaChuyenGia) as SoChuyenGia
+-- Tìm kiếm các kỹ năng mà chuyên gia có cấp độ từ 4 trở lên và tính tổng số chuyên gia cho mỗi kỹ năng đó.
+-- Chỉ bao gồm những kỹ năng có tổng số chuyên gia lớn hơn 2.
+-- Sắp xếp kết quả theo tên kỹ năng tăng dần.
+SELECT TenKyNang, count(ChuyenGia.MaChuyenGia) AS TongChuyenGia
 FROM ChuyenGia
 JOIN ChuyenGia_KyNang ON ChuyenGia_KyNang.MaChuyenGia=ChuyenGia.MaChuyenGia
-JOIN KyNang ON KyNang.MaKyNang=ChuyenGia_KyNang.MaKyNang
-WHERE (CapDo>4)
-HAVING (SoChuyenGia > 2)
-GROUP BY MaKyNang
-ORDER BY TenKyNang DESC;
+JOIN KyNang ON ChuyenGia_KyNang.MaKyNang=KyNang.MaKyNang
+WHERE (CapDo>=4)
+GROUP BY TenKyNang
+HAVING (count(ChuyenGia.MaChuyenGia)>2)
+ORDER BY TenKyNang;
 
--- Liệt kê tên các công ty có lĩnh vực 'Điện toán đám mây' và tính tổng số nhân viên của họ. Sắp xếp kết quả theo tổng số nhân viên tăng dần.
-SELECT sum(SoNhanVien) AS TongNhanVien
+-- Liệt kê tên các công ty có lĩnh vực 'Điện toán đám mây' và tính tổng số nhân viên của họ.
+-- Sắp xếp kết quả theo tổng số nhân viên tăng dần.
+SELECT TenCongTy, sum(SoNhanVien) AS TongNhanVien
 FROM CongTy
 WHERE (LinhVuc=N'Điện toán đám mây')
-GROUP BY MaCongTy
+GROUP BY TenCongTy
 ORDER BY TongNhanVien;
 
--- Liệt kê tên các công ty có số nhân viên từ 50 đến 150 và tính trung bình số nhân viên của họ. Sắp xếp kết quả theo tên công ty tăng dần.
-SELECT AVG(SoNhanVien)
+-- Liệt kê tên các công ty có số nhân viên từ 50 đến 150 và tính trung bình số nhân viên của họ.
+-- Sắp xếp kết quả theo tên công ty tăng dần.
+SELECT TenCongTy, AVG(SoNhanVien) as TrungBinhNhanVien
 FROM CongTy
 WHERE (SoNhanVien BETWEEN 50 AND 150)
-GROUP BY MaCongTy
+GROUP BY TenCongTy
 ORDER BY TenCongTy;
 
--- Xác định số lượng kỹ năng cho mỗi chuyên gia có cấp độ tối đa là 5 và chỉ bao gồm những chuyên gia có ít nhất một kỹ năng đạt cấp độ tối đa này. Sắp xếp kết quả theo tên chuyên gia tăng dần.
-SELECT COUNT(MaKyNang)
-FROM ChuyenGia_KyNang
-WHERE (CapDo<=5 AND EX)
-GROUP BY MaChuyenGia;
--- chua cong
+-- Xác định số lượng kỹ năng cho mỗi chuyên gia có cấp độ tối đa là 5 và 
+-- chỉ bao gồm những chuyên gia có ít nhất một kỹ năng đạt cấp độ tối đa này.
+-- Sắp xếp kết quả theo tên chuyên gia tăng dần.
+SELECT HoTen, COUNT(KyNang.MaKyNang) AS SoLuongKyNang
+FROM ChuyenGia
+JOIN ChuyenGia_KyNang ON ChuyenGia_KyNang.MaChuyenGia = ChuyenGia.MaChuyenGia
+JOIN KyNang ON KyNang.MaKyNang = ChuyenGia_KyNang.MaKyNang
 
--- Liệt kê tên các kỹ năng mà chuyên gia có cấp độ từ 4 trở lên và tính tổng số chuyên gia cho mỗi kỹ năng đó. Chỉ bao gồm những kỹ năng có tổng số chuyên gia lớn hơn 2. Sắp xếp kết quả theo tên kỹ năng tăng dần.
-SELECT sum(MaChuyenGia) as SoChuyenGia
+WHERE CapDo<=5 AND ChuyenGia.MaChuyenGia IN (
+    SELECT ChuyenGia_KyNang.MaChuyenGia
+    FROM ChuyenGia_KyNang
+    WHERE CapDo = 5
+)
+
+GROUP BY HoTen
+ORDER BY HoTen ASC;
+
+
+
+-- Liệt kê tên các kỹ năng mà chuyên gia có cấp độ từ 4 trở lên và tính tổng số chuyên gia cho mỗi kỹ năng đó.
+-- Chỉ bao gồm những kỹ năng có tổng số chuyên gia lớn hơn 2. Sắp xếp kết quả theo tên kỹ năng tăng dần.
+SELECT TenKyNang, count(ChuyenGia.MaChuyenGia) AS TongChuyenGia
 FROM ChuyenGia
 JOIN ChuyenGia_KyNang ON ChuyenGia_KyNang.MaChuyenGia=ChuyenGia.MaChuyenGia
-JOIN KyNang ON KyNang.MaKyNang=ChuyenGia_KyNang.MaKyNang
-WHERE (CapDo>4)
-HAVING (SoChuyenGia > 2)
-GROUP BY MaKyNang
+JOIN KyNang ON ChuyenGia_KyNang.MaKyNang=KyNang.MaKyNang
+WHERE (CapDo>=4)
+GROUP BY TenKyNang
+HAVING (count(ChuyenGia.MaChuyenGia)>2)
 ORDER BY TenKyNang;
 
 
--- Tìm kiếm tên của các chuyên gia trong lĩnh vực 'Phát triển phần mềm' và tính trung bình cấp độ kỹ năng của họ. Chỉ bao gồm những chuyên gia có cấp độ trung bình lớn hơn 3. Sắp xếp kết quả theo cấp độ trung bình giảm dần.
-SELECT AVG(CapDo) AS TrungBinhCapDo
+-- Tìm kiếm tên của các chuyên gia trong lĩnh vực 'Phát triển phần mềm' và tính trung bình cấp độ kỹ năng của họ.
+-- Chỉ bao gồm những chuyên gia có cấp độ trung bình lớn hơn 3. Sắp xếp kết quả theo cấp độ trung bình giảm dần.
+SELECT HoTen, AVG(CapDo) AS TrungBinhCapDo
 FROM ChuyenGia
 JOIN ChuyenGia_KyNang ON ChuyenGia_KyNang.MaChuyenGia=ChuyenGia.MaChuyenGia
 WHERE (ChuyenNganh=N'Phát triển phần mềm')
-HAVING (TrungBinhCapDo>3)
-GROUP BY MaChuyenGia
+GROUP BY HoTen
+HAVING (AVG(CapDo)>3)
 ORDER BY TrungBinhCapDo DESC;
 
 
