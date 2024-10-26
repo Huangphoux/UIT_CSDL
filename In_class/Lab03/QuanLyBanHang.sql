@@ -173,8 +173,8 @@ INSERT INTO CTHD(SOHD, MASP, SL) VALUES('1021', 'TV02', '10')
 INSERT INTO CTHD(SOHD, MASP, SL) VALUES('1022', 'ST07', '1')
 INSERT INTO CTHD(SOHD, MASP, SL) VALUES('1023', 'ST04', '6')
 
--- 12. Tìm các số hóa đơn đã mua sản phẩm có mã số “BB01” hoặc “BB02”, mỗi sản phẩm mua với số 
--- lượng từ 10 đến 20.
+-- 12. Tìm các số hóa đơn đã mua sản phẩm có mã số “BB01” hoặc “BB02”,
+-- mỗi sản phẩm mua với số lượng từ 10 đến 20.
 SELECT SoHD FROM CTHD
 WHERE (MaSP IN ('BB01', 'BB02') AND SL BETWEEN 10 AND 20);
 
@@ -187,14 +187,15 @@ INTERSECT
 SELECT SoHD FROM CTHD
 WHERE (MaSP='BB02' AND SL BETWEEN 10 AND 20);
 
--- 14. In ra danh sách các sản phẩm (MASP,TENSP) do “Trung Quoc” sản xuất hoặc các sản phẩm được 
+-- 14. In ra danh sách các sản phẩm (MASP,TENSP)
+-- do “Trung Quoc” sản xuất hoặc các sản phẩm được 
 -- bán ra trong ngày 1/1/2007.
 SELECT SanPham.MaSP, TenSP FROM SanPham WHERE (NuocSX='Trung Quoc')
 UNION
 SELECT SanPham.MaSP, TenSP FROM SanPham
 JOIN CTHD ON SanPham.MaSP=CTHD.MaSP
 JOIN HoaDon ON HoaDon.SoHD=CTHD.SoHD
-WHERE (NGHD=1/1/2007);
+WHERE (NGHD='1/1/2007');
 
 -- 15. In ra danh sách các sản phẩm (MASP,TENSP) không bán được.
 SELECT SanPham.MaSP, TenSP FROM SanPham
@@ -202,7 +203,8 @@ EXCEPT
 SELECT SanPham.MaSP, TenSP FROM SanPham
 JOIN CTHD ON SanPham.MaSP=CTHD.MaSP;
 
--- 16. In ra danh sách các sản phẩm (MASP,TENSP) không bán được trong năm 2006.
+-- 16. In ra danh sách các sản phẩm (MASP,TENSP)
+-- không bán được trong năm 2006.
 SELECT SanPham.MaSP, TenSP FROM SanPham
 EXCEPT
 SELECT SanPham.MaSP, TenSP FROM SanPham
@@ -210,8 +212,8 @@ JOIN CTHD ON SanPham.MaSP=CTHD.MaSP
 JOIN HoaDon On HoaDon.SoHD=CTHD.SoHD
 WHERE (YEAR(NgHD)=2006);
 
--- 17. In ra danh sách các sản phẩm (MASP,TENSP) do “Trung Quoc” sản xuất không bán được trong 
--- năm 2006.
+-- 17. In ra danh sách các sản phẩm (MASP,TENSP)
+-- do “Trung Quoc” sản xuất không bán được trong năm 2006.
 SELECT SanPham.MaSP, TenSP FROM SanPham WHERE (NUOCSX='Trung Quoc')
 EXCEPT
 SELECT SanPham.MaSP, TenSP FROM SanPham
@@ -219,12 +221,14 @@ JOIN CTHD ON SanPham.MaSP=CTHD.MaSP
 JOIN HoaDon On HoaDon.SoHD=CTHD.SoHD
 WHERE (YEAR(NgHD)=2006 AND NUOCSX='Trung Quoc');
 
--- 18. Tìm số hóa đơn trong năm 2006 đã mua ít nhất tất cả các sản phẩm do Singapore sản xuất.
+-- 18. Tìm số hóa đơn trong năm 2006
+-- đã mua ít nhất tất cả các sản phẩm do Singapore sản xuất.
 SELECT * FROM CTHD AS sx
-WHERE NOT EXISTS (
-           (SELECT MaSP FROM SanPham AS p )
+JOIN HoaDon ON sx.SoHD=HoaDon.SoHD
+WHERE YEAR(NgHD)=2006 AND NOT EXISTS (
+           (SELECT MaSP FROM SanPham AS p WHERE NUOCSX='Singapore')
             EXCEPT
-           (SELECT sp.MaSP FROM  CTHD AS sp WHERE sp.SoHD = sx.SoHD) 
+           (SELECT sp.MaSP FROM CTHD AS sp WHERE sp.SoHD = sx.SoHD)
 );
 
 
