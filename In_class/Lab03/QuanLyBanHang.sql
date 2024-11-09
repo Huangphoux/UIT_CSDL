@@ -217,9 +217,13 @@ WHERE (YEAR(NgHD)=2006);
 SELECT SanPham.MaSP, TenSP FROM SanPham WHERE (NUOCSX='Trung Quoc')
 EXCEPT
 SELECT SanPham.MaSP, TenSP FROM SanPham
-JOIN CTHD ON SanPham.MaSP=CTHD.MaSP
-JOIN HoaDon On HoaDon.SoHD=CTHD.SoHD
-WHERE (YEAR(NgHD)=2006 AND NUOCSX='Trung Quoc');
+WHERE MaSP IN (
+	SELECT MaSP FROM CTHD
+	WHERE YEAR(NgHD)=2006 AND SoHD IN (
+		SELECT SoHD FROM HoaDon
+		WHERE NUOCSX='Trung Quoc'
+	)
+);
 
 -- 18. Tìm số hóa đơn trong năm 2006
 -- đã mua ít nhất tất cả các sản phẩm do Singapore sản xuất.
