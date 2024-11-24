@@ -1,0 +1,135 @@
+﻿USE QuanLyBanHang;
+
+-- 11. Ngày mua hàng (NGHD) của một khách hàng thành viên sẽ lớn hơn hoặc bằng
+-- ngày khách hàng đó đăng ký thành viên (NGDK). 
+GO
+CREATE TRIGGER ThemSua_NgayMuaHang ON HOADON
+FOR INSERT, UPDATE
+AS
+BEGIN
+	DECLARE @NGHD SMALLDATETIME, @NGDK SMALLDATETIME, @MAKH char(4)
+
+	SELECT @NGHD = NGHD, @MAKH = MAKH FROM INSERTED
+	SELECT @NGDK = NGDK FROM KHACHHANG WHERE MAKH = @MAKH
+	
+	IF(@NGHD < @NGDK)
+	BEGIN
+		PRINT 'ERROR: LOI NGAY DANG KI!'
+		ROLLBACK TRANSACTION
+	END ELSE
+	BEGIN
+		PRINT 'Them Thanh cong'
+	END
+END
+
+DROP TRIGGER ThemSua_NgayMuaHang;
+
+SET DATEFORMAT dmy;
+INSERT INTO HOADON(SOHD, NGHD, MAKH, MANV, TRIGIA) VALUES('1024', '23/07/2024', 'KH01', 'NV01', '320000')
+
+-- 12. Ngày bán hàng (NGHD) của một nhân viên phải lớn hơn hoặc bằng
+-- ngày nhân viên đó vào làm. 
+GO
+CREATE TRIGGER ThemSua_NgayBanHang ON HOADON
+FOR INSERT, UPDATE
+AS
+BEGIN
+	DECLARE @NGHD SMALLDATETIME, @NGVL SMALLDATETIME, @MANV char(4)
+
+	SELECT @NGHD = NGHD, @MANV = MANV FROM INSERTED
+	SELECT @NGVL = NGVL FROM NHANVIEN WHERE MANV = @MANV
+	
+	IF(@NGHD < @NGVL)
+	BEGIN
+		PRINT 'ERROR: LOI NGAY VAO LAM!'
+		ROLLBACK TRANSACTION
+	END ELSE
+	BEGIN
+		PRINT 'Them Thanh cong'
+	END
+END
+
+DROP TRIGGER ThemSua_NgayBanHang;
+
+SET DATEFORMAT dmy;
+INSERT INTO HOADON(SOHD, NGHD, MAKH, MANV, TRIGIA) VALUES('1025', '13/04/2005', 'KH01', 'NV01', '320000')
+
+
+-- 13. Trị giá của một hóa đơn là tổng thành tiền (số lượng*đơn giá)
+-- của các chi tiết thuộc hóa đơn đó. 
+GO
+CREATE TRIGGER Them_CTHD ON CTHD
+FOR INSERT
+AS
+BEGIN
+	DECLARE @SoHD INT, @MaSP CHAR(4), @SoLuong INT, @TriGia MONEY
+	
+	SELECT @SoHD = SoHD, @MaSP = MaSP, @SoLuong = SL FROM INSERTED
+	SELECT @TriGia = @SoLuong * (SELECT Gia FROM SANPHAM WHERE MaSP = @MaSP)
+	
+	DECLARE cursor_CTHD CURSOR FOR
+		SELECT MaSP, SL FROM CTHD WHERE SoHD = @SoHD
+	
+	OPEN cursor_CTHD
+	FETCH NEXT FROM cursor_CTHD INTO @MaSP, @SoLuong
+
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		SELECT @TriGia = @TriGia + @SoLuong * (SELECT Gia FROM SANPHAM WHERE MaSP = @MaSP)
+		FETCH NEXT FROM cursor_CTHD INTO @MaSP, @SoLuong
+	END
+	
+	CLOSE cursor_CTHD
+	DEALLOCATE cursor_CTHD
+
+	UPDATE HOADON
+	SET TriGia = @TriGia
+	WHERE SoHD = @SoHD
+END
+
+DROP TRIGGER Them_CTHD;
+
+INSERT INTO CTHD(SOHD, MASP, SL) VALUES('1023', 'ST07', '6')
+
+SELECT * FROM HOADON
+WHERE SoHD = '1023'
+
+-- 14. Doanh số của một khách hàng là tổng trị giá các hóa đơn
+-- mà khách hàng thành viên đó đã mua.
+GO
+CREATE TRIGGER Them_HoaDon ON HOADON
+FOR INSERT, UPDATE< DELETE
+AS
+BEGIN
+	DECLARE @SoHD INT, @TriGia MONEY, @DoanhSo MONEY, @MaKH CHAR(4)
+	
+	SELECT @SoHD = SoHD, @MaKH = MaKH, @TriGia = TriGia FROM INSERTED
+	SELECT @MaKH = MaKH, @DoanhSo = @TriGia FROM KHACHHANG
+	
+	DECLARE cursor_HoaDon CURSOR FOR
+		SELECT TriGia FROM HoaDon WHERE MaKH = @MaKH
+	
+	OPEN cursor_HoaDon
+	FETCH NEXT FROM cursor_HoaDon INTO @TriGia
+
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+		SELECT @DoanhSo = @DoanhSo + @TriGia
+		FETCH NEXT FROM cursor_HoaDon INTO @TriGia
+	END
+	
+	CLOSE cursor_HoaDon
+	DEALLOCATE cursor_HoaDon
+
+	UPDATE KHACHHANG
+	SET DoanhSo = @DoanhSo
+	WHERE MaKH = @MaKH
+END
+
+DROP TRIGGER Them_HoaDon;
+
+INSERT INTO HOADON(SOHD, NGHD, MAKH, MANV, TRIGIA) VALUES('1029', '16/01/2007', 'KH10', 'NV03', '67500')
+
+SELECT * FROM KHACHHANG
+WHERE MaKH = 'KH10'
+
